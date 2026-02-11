@@ -1,0 +1,23 @@
+# 환경변수 (API키 절대 올리면 안됨)
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# 로그 (상태 파일은 제외 - Git에서 추적해야 함)
+logs/*.log
+
+# Oracle Cloud 배포 관련 (GitHub Actions 쓸거라 불필요)
+ORACLE_CLOUD_배포가이드.md

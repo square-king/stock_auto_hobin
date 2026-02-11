@@ -1,0 +1,23 @@
+[
+  {
+    "timestamp": "2026-02-10T09:17:34.477132",
+    "action": "BUY",
+    "strategy": "수급 쌍끌이",
+    "stock_code": "015760",
+    "stock_name": "015760",
+    "price": 61800,
+    "quantity": 1,
+    "reason": "A등급 쌍끌이 (외국인: +2,464,612, 기관: +60,700)"
+  },
+  {
+    "timestamp": "2026-02-10T12:02:08.640688",
+    "action": "SELL",
+    "strategy": "수급 쌍끌이",
+    "stock_code": "015760",
+    "stock_name": "015760",
+    "price": 60600,
+    "quantity": 1,
+    "reason": "전일 저가 이탈 (수익률: -1.9%)",
+    "profit_rate": -1.94
+  }
+]
