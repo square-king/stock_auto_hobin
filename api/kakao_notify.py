@@ -2,41 +2,75 @@
 카카오톡 알림 모듈
 """
 import requests
+import json
 from datetime import datetime
 from typing import Optional
 import sys
 sys.path.append('..')
-from config.settings import KAKAO_REST_API_KEY, KAKAO_ACCESS_TOKEN
+from config.settings import KAKAO_REST_API_KEY, KAKAO_ACCESS_TOKEN, KAKAO_REFRESH_TOKEN
 
 
 class KakaoNotifier:
     """카카오톡 알림 발송"""
-    
+
     def __init__(self):
         self.rest_api_key = KAKAO_REST_API_KEY
         self.access_token = KAKAO_ACCESS_TOKEN
-        
+        self.refresh_token = KAKAO_REFRESH_TOKEN
+        self._token_refreshed = False
+
+    def _refresh_access_token(self) -> bool:
+        """refresh_token으로 access_token 자동 갱신"""
+        if not self.refresh_token:
+            return False
+
+        try:
+            url = "https://kauth.kakao.com/oauth/token"
+            data = {
+                "grant_type": "refresh_token",
+                "client_id": self.rest_api_key,
+                "refresh_token": self.refresh_token,
+            }
+            response = requests.post(url, data=data)
+            result = response.json()
+
+            if "access_token" in result:
+                self.access_token = result["access_token"]
+                print("[INFO] 카카오 access_token 자동 갱신 성공")
+
+                # refresh_token도 갱신된 경우 (만료 1개월 이내일 때)
+                if "refresh_token" in result:
+                    self.refresh_token = result["refresh_token"]
+                    print("[INFO] 카카오 refresh_token도 갱신됨")
+
+                self._token_refreshed = True
+                return True
+            else:
+                print(f"[ERROR] 카카오 토큰 갱신 실패: {result}")
+                return False
+        except Exception as e:
+            print(f"[ERROR] 카카오 토큰 갱신 오류: {e}")
+            return False
+
     def send_message(self, message: str) -> bool:
         """
         카카오톡 메시지 발송 (나에게 보내기)
-        
-        Args:
-            message: 발송할 메시지
-            
-        Returns:
-            성공 여부
         """
-        if not self.access_token:
-            print("[WARN] 카카오톡 액세스 토큰이 설정되지 않았습니다.")
+        if not self.access_token and not self.refresh_token:
+            print("[WARN] 카카오톡 토큰이 설정되지 않았습니다.")
             print(f"[LOG] {message}")
             return False
-            
+
+        # refresh_token이 있으면 매 실행시 갱신
+        if self.refresh_token and not self._token_refreshed:
+            self._refresh_access_token()
+
         url = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        
+
         template = {
             "object_type": "text",
             "text": message,
@@ -44,14 +78,20 @@ class KakaoNotifier:
                 "web_url": "https://www.koreainvestment.com",
             }
         }
-        
-        import json
+
         data = {
             "template_object": json.dumps(template)
         }
-        
+
         try:
             response = requests.post(url, headers=headers, data=data)
+
+            # 401 = 토큰 만료 → 갱신 후 재시도
+            if response.status_code == 401 and self.refresh_token:
+                if self._refresh_access_token():
+                    headers["Authorization"] = f"Bearer {self.access_token}"
+                    response = requests.post(url, headers=headers, data=data)
+
             response.raise_for_status()
             return True
         except Exception as e:

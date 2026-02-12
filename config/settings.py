@@ -24,6 +24,7 @@ KIS_BASE_URL = "https://openapivts.koreainvestment.com:29443" if KIS_IS_PAPER el
 # =============================================================================
 KAKAO_REST_API_KEY = os.getenv("KAKAO_REST_API_KEY", "YOUR_KAKAO_KEY")
 KAKAO_ACCESS_TOKEN = os.getenv("KAKAO_ACCESS_TOKEN", "")  # 토큰 발급 후 설정
+KAKAO_REFRESH_TOKEN = os.getenv("KAKAO_REFRESH_TOKEN", "")  # 자동 갱신용
 
 # =============================================================================
 # 투자 설정
