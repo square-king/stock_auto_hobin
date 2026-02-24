@@ -16,6 +16,9 @@ on:
 env:
   TZ: Asia/Seoul
 
+permissions:
+  contents: write
+
 jobs:
   trading:
     runs-on: ubuntu-latest
