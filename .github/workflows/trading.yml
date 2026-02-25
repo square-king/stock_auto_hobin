@@ -6,12 +6,23 @@ on:
     # 09:01 KST → 00:01 UTC (매수 실행)
     - cron: '1 0 * * 1-5'
     # 장중 청산 체크: 09:10~15:20 KST → 00:10~06:20 UTC (10분 간격)
-    - cron: '*/10 0-6 * * 1-5'
+    - cron: '*/10 0-5 * * 1-5'
     # 15:35 KST → 06:35 UTC (스크리닝)
     - cron: '35 6 * * 1-5'
-    # 15:40 KST → 06:40 UTC (일일 리포트)
-    - cron: '40 6 * * 1-5'
-  workflow_dispatch:  # 수동 실행 가능
+    # 15:45 KST → 06:45 UTC (일일 리포트)
+    - cron: '45 6 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      task:
+        description: '실행할 태스크'
+        required: false
+        default: 'exit_check'
+        type: choice
+        options:
+          - morning_buy
+          - exit_check
+          - scan
+          - report
 
 env:
   TZ: Asia/Seoul
@@ -26,8 +37,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -41,16 +50,23 @@ jobs:
       - name: Determine task
         id: task
         run: |
-          HOUR_KST=$(TZ=Asia/Seoul date +%H)
-          MIN_KST=$(TZ=Asia/Seoul date +%M)
-          echo "현재 KST: ${HOUR_KST}:${MIN_KST}"
+          # 수동 실행인 경우
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "task=${{ github.event.inputs.task }}" >> $GITHUB_OUTPUT
+            echo "수동 실행: ${{ github.event.inputs.task }}"
+            exit 0
+          fi
 
-          if [ "$HOUR_KST" = "15" ] && [ "$MIN_KST" -ge 38 ]; then
-            echo "task=report" >> $GITHUB_OUTPUT
-          elif [ "$HOUR_KST" = "15" ] && [ "$MIN_KST" -ge 30 ]; then
-            echo "task=scan" >> $GITHUB_OUTPUT
-          elif [ "$HOUR_KST" = "09" ] && [ "$MIN_KST" -le 5 ]; then
+          # cron 스케줄로 태스크 결정 (시간 지연에 영향 안 받음)
+          SCHEDULE="${{ github.event.schedule }}"
+          echo "트리거된 cron: $SCHEDULE"
+
+          if [ "$SCHEDULE" = "1 0 * * 1-5" ]; then
             echo "task=morning_buy" >> $GITHUB_OUTPUT
+          elif [ "$SCHEDULE" = "35 6 * * 1-5" ]; then
+            echo "task=scan" >> $GITHUB_OUTPUT
+          elif [ "$SCHEDULE" = "45 6 * * 1-5" ]; then
+            echo "task=report" >> $GITHUB_OUTPUT
           else
             echo "task=exit_check" >> $GITHUB_OUTPUT
           fi
@@ -68,7 +84,10 @@ jobs:
           EOF
 
       - name: Run task
-        run: python run_task.py ${{ steps.task.outputs.task }}
+        run: |
+          echo "실행 태스크: ${{ steps.task.outputs.task }}"
+          echo "현재 KST: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M:%S')"
+          python run_task.py ${{ steps.task.outputs.task }}
 
       - name: Save state
         run: |
