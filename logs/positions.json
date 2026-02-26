@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "stock_code": "006800",
+    "stock_name": "006800",
+    "quantity": 1,
+    "entry_price": 72200,
+    "entry_date": "2026-02-26 11:27:38",
+    "stop_loss": 69255,
+    "take_profit": null,
+    "strategy_name": "수급 쌍끌이"
+  }
+]

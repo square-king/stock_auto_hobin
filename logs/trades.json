@@ -19,5 +19,15 @@
     "quantity": 1,
     "reason": "전일 저가 이탈 (수익률: -1.9%)",
     "profit_rate": -1.94
+  },
+  {
+    "timestamp": "2026-02-26T11:27:41.688089",
+    "action": "BUY",
+    "strategy": "수급 쌍끌이",
+    "stock_code": "006800",
+    "stock_name": "006800",
+    "price": 72200,
+    "quantity": 1,
+    "reason": "A등급 쌍끌이 (외국인: +7,763,745, 기관: +67,100)"
   }
 ]
