@@ -27,6 +27,12 @@ def run():
     if task == "morning_buy":
         bot.execute_morning_buy()
     elif task == "exit_check":
+        # 대기 시그널이 있으면 매수 먼저 실행 (morning_buy 크론 미작동 대비)
+        pending = bot.load_pending_signals()
+        if pending:
+            print(f"[INFO] 대기 시그널 {len(pending)}개 발견 → 매수 먼저 실행")
+            bot.execute_morning_buy()
+
         if bot.is_market_open():
             bot.check_exit_signals()
         else:
