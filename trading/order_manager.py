@@ -28,14 +28,28 @@ class OrderManager:
             with open(self.trades_log_path, "w") as f:
                 json.dump([], f)
     
+    def _check_balance_for_stock(self, stock_code: str) -> int:
+        """실제 계좌 잔고에서 해당 종목 보유 수량 확인"""
+        try:
+            balance = self.api.get_balance()
+            if balance.get("rt_cd") != "0":
+                return -1  # 잔고 조회 실패 → 알 수 없음
+            for item in balance.get("output1", []):
+                if item.get("pdno") == stock_code:
+                    return int(item.get("hldg_qty", 0))
+            return 0  # 해당 종목 없음
+        except Exception as e:
+            print(f"[WARN] 잔고 확인 실패: {e}")
+            return -1
+
     def execute_buy(self, signal: Signal, strategy_name: str) -> Optional[Position]:
         """
         매수 주문 실행
-        
+
         Args:
             signal: 매수 시그널
             strategy_name: 전략 이름
-            
+
         Returns:
             Position 또는 None
         """
@@ -46,12 +60,21 @@ class OrderManager:
                 signal.quantity,
                 0  # 시장가
             )
-            
+
             if result.get("rt_cd") != "0":
                 print(f"[ERROR] 매수 주문 실패: {result.get('msg1')}")
                 self.notifier.notify_error(f"매수 실패: {signal.stock_code} - {result.get('msg1')}")
                 return None
-            
+
+            # 체결 확인 (모의투자는 주문 접수≠체결)
+            import time
+            time.sleep(2)
+            held_qty = self._check_balance_for_stock(signal.stock_code)
+            if held_qty == 0:
+                print(f"[WARN] 주문 접수됐으나 체결 안 됨: {signal.stock_code}")
+                self.notifier.notify_error(f"매수 미체결: {signal.stock_code} - 주문 접수 후 잔고 없음")
+                return None
+
             # 포지션 생성
             position = Position(
                 stock_code=signal.stock_code,
@@ -63,7 +86,7 @@ class OrderManager:
                 take_profit=signal.take_profit,
                 strategy_name=strategy_name,
             )
-            
+
             # 카톡 알림
             self.notifier.notify_buy(
                 strategy=strategy_name,
@@ -73,14 +96,14 @@ class OrderManager:
                 quantity=signal.quantity,
                 reason=signal.reason,
             )
-            
+
             # 로그 저장
             self._log_trade("BUY", signal, strategy_name)
-            
+
             print(f"[BUY] {strategy_name} | {signal.stock_code} | {signal.quantity}주 @ {signal.price:,}원")
-            
+
             return position
-            
+
         except Exception as e:
             print(f"[ERROR] 매수 실행 오류: {e}")
             self.notifier.notify_error(f"매수 오류: {signal.stock_code} - {e}")
@@ -89,25 +112,38 @@ class OrderManager:
     def execute_sell(self, signal: Signal, position: Position) -> bool:
         """
         매도 주문 실행
-        
+
         Args:
             signal: 매도 시그널
             position: 현재 포지션
-            
+
         Returns:
-            성공 여부
+            성공 여부 (잔고 없는 유령 포지션이면 True 반환하여 포지션 정리)
         """
         try:
+            # 매도 전 실제 잔고 확인
+            held_qty = self._check_balance_for_stock(signal.stock_code)
+            if held_qty == 0:
+                print(f"[WARN] 실제 잔고 없음 → 유령 포지션 정리: {signal.stock_code}")
+                self.notifier.notify_error(f"유령 포지션 정리: {signal.stock_code} (실제 잔고 없음)")
+                return True  # True 반환하여 내부 포지션 제거
+
             # 주문 실행
             result = self.api.sell_stock(
                 signal.stock_code,
                 signal.quantity,
                 0  # 시장가
             )
-            
+
             if result.get("rt_cd") != "0":
-                print(f"[ERROR] 매도 주문 실패: {result.get('msg1')}")
-                self.notifier.notify_error(f"매도 실패: {signal.stock_code} - {result.get('msg1')}")
+                msg = result.get('msg1', '')
+                print(f"[ERROR] 매도 주문 실패: {msg}")
+                # 잔고 없음 에러 → 유령 포지션 정리
+                if "잔고" in msg:
+                    print(f"[WARN] 잔고 없음 → 유령 포지션 정리: {signal.stock_code}")
+                    self.notifier.notify_error(f"유령 포지션 정리: {signal.stock_code} (잔고 없음)")
+                    return True
+                self.notifier.notify_error(f"매도 실패: {signal.stock_code} - {msg}")
                 return False
             
             # 수익률 계산
