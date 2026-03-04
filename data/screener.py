@@ -6,9 +6,9 @@
 - 20일 평균 거래대금 > 50억
 - 각 전략별 사전 필터링
 """
-import FinanceDataReader as fdr
-import pandas as pd
-from datetime import datetime, timedelta
+import requests
+from bs4 import BeautifulSoup
+import re
 from typing import List, Dict
 from data.market_data import market_data
 from data.naver_finance import naver_finance
@@ -17,32 +17,55 @@ from indicators.technical import sma, bollinger_bands, stochastic_slow
 
 class StockScreener:
     """블로그 저자 방식 스크리너 (시총/거래대금 필터 포함)"""
-    
+
     def __init__(self):
         self.kospi_stocks = []
         self.kosdaq_stocks = []
         self.filtered_stocks = []  # 시총/거래대금 필터 통과 종목
         self._load_stock_list()
-    
+
     def _load_stock_list(self):
-        """코스피/코스닥 전체 종목 로드 (최대 3회 재시도)"""
-        import time
-        for attempt in range(3):
-            try:
-                kospi = fdr.StockListing('KOSPI')
-                self.kospi_stocks = kospi[['Code', 'Name']].to_dict('records')
+        """네이버 금융에서 코스피/코스닥 전체 종목 로드"""
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        try:
+            self.kospi_stocks = self._fetch_naver_stocks(0, headers)
+            self.kosdaq_stocks = self._fetch_naver_stocks(1, headers)
+            print(f"[SCREENER] 종목 로드: 코스피 {len(self.kospi_stocks)}개, 코스닥 {len(self.kosdaq_stocks)}개")
+        except Exception as e:
+            print(f"[ERROR] 종목 리스트 로드 실패: {e}")
 
-                kosdaq = fdr.StockListing('KOSDAQ')
-                self.kosdaq_stocks = kosdaq[['Code', 'Name']].to_dict('records')
+    def _fetch_naver_stocks(self, sosok: int, headers: dict) -> List[Dict]:
+        """네이버 금융 시가총액 페이지에서 종목 목록 수집 (sosok: 0=코스피, 1=코스닥)"""
+        stocks = []
+        # 첫 페이지에서 마지막 페이지 번호 확인
+        url = f'https://finance.naver.com/sise/sise_market_sum.naver?sosok={sosok}&page=1'
+        r = requests.get(url, headers=headers)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        last_page = 1
+        paging = soup.select_one('td.pgRR a')
+        if paging:
+            m = re.search(r'page=(\d+)', paging['href'])
+            if m:
+                last_page = int(m.group(1))
 
-                if self.kospi_stocks and self.kosdaq_stocks:
-                    print(f"[SCREENER] 종목 로드: 코스피 {len(self.kospi_stocks)}개, 코스닥 {len(self.kosdaq_stocks)}개")
-                    return
-
-            except Exception as e:
-                print(f"[WARN] 종목 리스트 로드 시도 {attempt+1}/3 실패: {e}")
-                if attempt < 2:
-                    time.sleep(3)
+        for page in range(1, last_page + 1):
+            url = f'https://finance.naver.com/sise/sise_market_sum.naver?sosok={sosok}&page={page}'
+            r = requests.get(url, headers=headers)
+            soup = BeautifulSoup(r.text, 'html.parser')
+            table = soup.select_one('table.type_2')
+            if not table:
+                continue
+            for row in table.select('tr')[2:]:
+                tds = row.select('td')
+                if len(tds) < 2:
+                    continue
+                a = tds[1].select_one('a')
+                if a and a.get('href'):
+                    code = a['href'].split('=')[-1]
+                    name = a.text.strip()
+                    if code and name:
+                        stocks.append({'Code': code, 'Name': name})
+        return stocks
     
     def filter_by_market_cap_and_volume(self, min_cap_억: int = 3000, min_volume_억: int = 50) -> List[str]:
         """
