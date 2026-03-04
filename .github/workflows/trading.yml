@@ -93,6 +93,9 @@ jobs:
 
       - name: Save state
         run: |
+          echo "=== State files ==="
+          ls -la logs/*.json 2>/dev/null || echo "no log files"
+          cat logs/positions.json 2>/dev/null || echo "no positions.json"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add logs/pending_signals.json logs/positions.json logs/trades.json 2>/dev/null || true

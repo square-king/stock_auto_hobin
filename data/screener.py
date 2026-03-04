@@ -25,18 +25,24 @@ class StockScreener:
         self._load_stock_list()
     
     def _load_stock_list(self):
-        """코스피/코스닥 전체 종목 로드"""
-        try:
-            kospi = fdr.StockListing('KOSPI')
-            self.kospi_stocks = kospi[['Code', 'Name']].to_dict('records')
-            
-            kosdaq = fdr.StockListing('KOSDAQ')
-            self.kosdaq_stocks = kosdaq[['Code', 'Name']].to_dict('records')
-            
-            print(f"[SCREENER] 종목 로드: 코스피 {len(self.kospi_stocks)}개, 코스닥 {len(self.kosdaq_stocks)}개")
-            
-        except Exception as e:
-            print(f"[ERROR] 종목 리스트 로드 실패: {e}")
+        """코스피/코스닥 전체 종목 로드 (최대 3회 재시도)"""
+        import time
+        for attempt in range(3):
+            try:
+                kospi = fdr.StockListing('KOSPI')
+                self.kospi_stocks = kospi[['Code', 'Name']].to_dict('records')
+
+                kosdaq = fdr.StockListing('KOSDAQ')
+                self.kosdaq_stocks = kosdaq[['Code', 'Name']].to_dict('records')
+
+                if self.kospi_stocks and self.kosdaq_stocks:
+                    print(f"[SCREENER] 종목 로드: 코스피 {len(self.kospi_stocks)}개, 코스닥 {len(self.kosdaq_stocks)}개")
+                    return
+
+            except Exception as e:
+                print(f"[WARN] 종목 리스트 로드 시도 {attempt+1}/3 실패: {e}")
+                if attempt < 2:
+                    time.sleep(3)
     
     def filter_by_market_cap_and_volume(self, min_cap_억: int = 3000, min_volume_억: int = 50) -> List[str]:
         """
