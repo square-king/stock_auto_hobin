@@ -1,0 +1,24 @@
+[
+  {
+    "strategy": "엔벨로프 20-20",
+    "stock_code": "458870",
+    "stock_name": "458870",
+    "reason": "1차 진입: 하한선(-20%) 터치 120,500원",
+    "signal_price": 120500,
+    "quantity": 1,
+    "stop_loss": 114475,
+    "take_profit": 151250,
+    "scan_date": "2026-03-05"
+  },
+  {
+    "strategy": "수급 쌍끌이",
+    "stock_code": "006800",
+    "stock_name": "006800",
+    "reason": "A등급 쌍끌이 (외국인: +8,870,272, 기관: +56,500)",
+    "signal_price": 65200,
+    "quantity": 1,
+    "stop_loss": 61940,
+    "take_profit": null,
+    "scan_date": "2026-03-05"
+  }
+]
