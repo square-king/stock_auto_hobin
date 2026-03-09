@@ -13,6 +13,8 @@ on:
     - cron: '35 6 * * 1-5'
     # 15:45 KST → 06:45 UTC (일일 리포트)
     - cron: '45 6 * * 1-5'
+    # 주말 keepalive — cron 스케줄 sync 유지 (토/일 21:00 KST → 12:00 UTC)
+    - cron: '0 12 * * 0,6'
   workflow_dispatch:
     inputs:
       task:
@@ -33,7 +35,15 @@ permissions:
   contents: write
 
 jobs:
+  # 주말 keepalive — Python 설치 없이 빠르게 끝남 (Actions 시간 절약)
+  keepalive:
+    if: github.event.schedule == '0 12 * * 0,6'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "keepalive $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M:%S')"
+
   trading:
+    if: github.event.schedule != '0 12 * * 0,6' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
