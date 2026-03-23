@@ -1,0 +1,13 @@
+[
+  {
+    "strategy": "엔벨로프 20-20",
+    "stock_code": "456160",
+    "stock_name": "456160",
+    "reason": "1차 진입: 하한선(-20%) 터치 77,000원",
+    "signal_price": 77000,
+    "quantity": 2,
+    "stop_loss": 73150,
+    "take_profit": 98335,
+    "scan_date": "2026-03-23"
+  }
+]
