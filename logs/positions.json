@@ -1,5 +1,15 @@
 [
   {
+    "stock_code": "140410",
+    "stock_name": "140410",
+    "quantity": 2,
+    "entry_price": 87500,
+    "entry_date": "2026-03-25 10:12:08",
+    "stop_loss": 82935,
+    "take_profit": 114975,
+    "strategy_name": "엔벨로프 20-20"
+  },
+  {
     "stock_code": "006800",
     "stock_name": "006800",
     "quantity": 1,
