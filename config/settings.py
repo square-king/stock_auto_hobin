@@ -30,8 +30,8 @@ KAKAO_REFRESH_TOKEN = os.getenv("KAKAO_REFRESH_TOKEN", "")  # 자동 갱신용
 # 투자 설정
 # =============================================================================
 TOTAL_CAPITAL = 2_000_000  # 총 투자금 200만원 (국내 주식 전용)
-NUM_STRATEGIES = 5
-CAPITAL_PER_STRATEGY = TOTAL_CAPITAL // NUM_STRATEGIES  # 40만원
+NUM_STRATEGIES = 2
+CAPITAL_PER_STRATEGY = TOTAL_CAPITAL // NUM_STRATEGIES  # 100만원
 
 # 리스크 관리
 MAX_LOSS_PER_TRADE = 0.01  # 1회 최대 손실 = 자금의 1%

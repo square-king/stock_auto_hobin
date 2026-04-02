@@ -25,8 +25,7 @@ from config.settings import (
     MARKET_OPEN_KR, MARKET_CLOSE_KR
 )
 from strategies import (
-    Pullback20MAStrategy, Envelope2020Strategy, StochPullbackStrategy,
-    BollingerSqueezeStrategy, SupplyDemandStrategy
+    Pullback20MAStrategy, Envelope2020Strategy,
 )
 from strategies.base_strategy import Signal, SignalType
 from trading.order_manager import OrderManager, PortfolioManager
@@ -43,9 +42,6 @@ class TradingBot:
         self.strategies = {
             "눌림목": Pullback20MAStrategy(CAPITAL_PER_STRATEGY),
             "엔벨로프": Envelope2020Strategy(CAPITAL_PER_STRATEGY),
-            "스토캐스틱": StochPullbackStrategy(CAPITAL_PER_STRATEGY),
-            "볼린저": BollingerSqueezeStrategy(CAPITAL_PER_STRATEGY),
-            "수급": SupplyDemandStrategy(CAPITAL_PER_STRATEGY),
         }
         
         # 매니저 초기화
@@ -101,43 +97,19 @@ class TradingBot:
         pending_signals = []
         
         # 1. 눌림목 전략: 급등주 스크리닝
-        print("\n[1/5] 눌림목 전략 - 급등주 스크리닝")
+        print("\n[1/2] 눌림목 전략 - 급등주 스크리닝")
         strategy = self.strategies["눌림목"]
         if strategy.can_open_position():
             surge_stocks = screener.get_surge_stocks(min_surge=0.30, days=20)
             strategy.set_watchlist(surge_stocks)
             self._scan_strategy(strategy, pending_signals)
-        
+
         # 2. 엔벨로프 전략: 코스닥 고변동성
-        print("\n[2/5] 엔벨로프 전략 - 코스닥 고변동성")
+        print("\n[2/2] 엔벨로프 전략 - 코스닥 고변동성")
         strategy = self.strategies["엔벨로프"]
         if strategy.can_open_position():
             volatile_stocks = screener.get_high_volatility_kosdaq(min_volatility=0.03)
             strategy.set_watchlist(volatile_stocks)
-            self._scan_strategy(strategy, pending_signals)
-        
-        # 3. 스토캐스틱 전략: 상승추세 눌림
-        print("\n[3/5] 스토캐스틱 전략 - 상승추세 눌림")
-        strategy = self.strategies["스토캐스틱"]
-        if strategy.can_open_position():
-            pullback_stocks = screener.get_uptrend_pullback()
-            strategy.set_watchlist(pullback_stocks)
-            self._scan_strategy(strategy, pending_signals)
-        
-        # 4. 볼린저 전략: 스퀴즈 종목
-        print("\n[4/5] 볼린저 전략 - 스퀴즈 종목")
-        strategy = self.strategies["볼린저"]
-        if strategy.can_open_position():
-            squeeze_stocks = screener.get_squeeze_stocks()
-            strategy.set_watchlist(squeeze_stocks)
-            self._scan_strategy(strategy, pending_signals)
-        
-        # 5. 수급 전략: 거래대금 상위
-        print("\n[5/5] 수급 전략 - 거래대금 상위")
-        strategy = self.strategies["수급"]
-        if strategy.can_open_position():
-            top_volume = screener.get_top_volume_stocks(top_n=100)
-            strategy.set_watchlist(top_volume)
             self._scan_strategy(strategy, pending_signals)
         
         # 시그널 저장
