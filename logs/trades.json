@@ -60,5 +60,15 @@
     "quantity": 2,
     "reason": "손절: 82,300원 <= 82,935원 (-5%)",
     "profit_rate": -5.94
+  },
+  {
+    "timestamp": "2026-04-08T12:28:36.946211",
+    "action": "BUY",
+    "strategy": "엔벨로프 20-20",
+    "stock_code": "214370",
+    "stock_name": "214370",
+    "price": 84100,
+    "quantity": 6,
+    "reason": "1차 진입: 하한선(-20%) 터치 82,000원"
   }
 ]

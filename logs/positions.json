@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "stock_code": "214370",
+    "stock_name": "214370",
+    "quantity": 6,
+    "entry_price": 84100,
+    "entry_date": "2026-04-08 12:28:34",
+    "stop_loss": 77900,
+    "take_profit": 104405,
+    "strategy_name": "엔벨로프 20-20"
+  }
+]
