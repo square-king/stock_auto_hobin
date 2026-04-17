@@ -81,5 +81,15 @@
     "quantity": 6,
     "reason": "익절: 20일선 도달 100,300원 (수익률: +19.3%)",
     "profit_rate": 19.26
+  },
+  {
+    "timestamp": "2026-04-17T12:38:53.985963",
+    "action": "BUY",
+    "strategy": "엔벨로프 20-20",
+    "stock_code": "082270",
+    "stock_name": "082270",
+    "price": 25500,
+    "quantity": 19,
+    "reason": "1차 진입: 하한선(-20%) 터치 25,650원"
   }
 ]
