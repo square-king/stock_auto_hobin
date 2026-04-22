@@ -91,5 +91,16 @@
     "price": 25500,
     "quantity": 19,
     "reason": "1차 진입: 하한선(-20%) 터치 25,650원"
+  },
+  {
+    "timestamp": "2026-04-22T12:36:46.611910",
+    "action": "SELL",
+    "strategy": "엔벨로프 20-20",
+    "stock_code": "082270",
+    "stock_name": "082270",
+    "price": 23050,
+    "quantity": 19,
+    "reason": "손절: 23,050원 <= 24,367원 (-5%)",
+    "profit_rate": -9.61
   }
 ]
